@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Hello mongoDB</h1>
+    <form action="/addProduct" method="post">
+        <input type="text" placeholder="name" name="name">
+        <input type="text" placeholder="price" name="price">
+        <input type="text" placeholder="qty" name="qty">
+        <button type="submit">Add Product</button>
+
+    </form>
+    <div id="products">
+
+    </div>
+
+    <div id="update">
+
+    </div>
+
+    <script>
+        function loadAllProduct() {
+            fetch('/products')
+                .then(res => res.json())
+                .then(products => {
+                    console.log(products);
+                    const container = document.getElementById('products');
+                    container.innerHTML = '';
+                    products.forEach(pd => {
+                        const p = document.createElement('p');
+                        p.innerHTML = `Name: ${pd.name}, price: ${pd.price}
+
+                        <button onclick="loadProduct('${pd._id}')">update</button>
+                    <button onclick="deleteProduct(event, '${pd._id}')">Delete</button>
+                    `;
+                        container.appendChild(p);
+                    });
+                })
+
+        }
+        loadAllProduct();
+
+        function loadProduct(id) {
+            fetch(`product/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    const update = document.getElementById('update');
+                    update.innerHTML = `
+                    <h3>Update: ${data._id}</h3>
+                    price: <input type="text" value="${data.price}" id="price">
+                    Quantity: <input type="text" value="${data.qty}" id="qty">
+                    <button onclick="updateProduct('${data._id}')">Submit</button>
+                    `;
+                })
+
+        }
+
+        function updateProduct(id) {
+            console.log('hit inside')
+            const price = document.getElementById('price').value;
+            const qty = document.getElementById('qty').value;
+            const product = { id, price, qty };
+            
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify(product)
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        loadAllProduct();
+                        document.getElementById('update').innerHTML = '';
+                    }
+                })
+            console.log('updating');
+        }
+
+        function deleteProduct(event, id) {
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        event.target.parentNode.style.display = 'none';
+                    }
+                    //console.log('deleted successfully');
+                })
+        }
+
+
+
+
+    </script>
+
+
+</body>
+
+</html>
